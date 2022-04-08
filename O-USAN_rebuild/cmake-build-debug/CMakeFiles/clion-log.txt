@@ -1,0 +1,7 @@
+/home/insppp/jetbrain/clion-2021.3.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/insppp/jetbrain/clion-2021.3.4/bin/ninja/linux/ninja -G Ninja /home/insppp/CLionProjects/O-USAN_rebuild
+-- OpenCV library status:
+--     version: 3.4.7
+--     include path: /usr/local/include;/usr/local/include/opencv
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/insppp/CLionProjects/O-USAN_rebuild/cmake-build-debug
