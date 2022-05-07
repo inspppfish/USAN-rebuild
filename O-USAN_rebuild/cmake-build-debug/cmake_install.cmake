@@ -1,4 +1,4 @@
-# Install script for directory: /home/insppp/CLionProjects/O-USAN_rebuild
+# Install script for directory: /home/insppp/mysource/USAN-rebuild/O-USAN_rebuild
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/insppp/CLionProjects/O-USAN_rebuild/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/insppp/mysource/USAN-rebuild/O-USAN_rebuild/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

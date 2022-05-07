@@ -1,3 +1,3 @@
 ToolSet: 1.0 (local)Options: 
 
-Options:-DCMAKE_MAKE_PROGRAM=/home/insppp/jetbrain/clion-2021.3.4/bin/ninja/linux/ninja
+Options:-DCMAKE_MAKE_PROGRAM=/home/insppp/jetbrains/clion-2022.1/bin/ninja/linux/ninja

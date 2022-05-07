@@ -5,7 +5,7 @@ using namespace std;
 
 uint32_t config = (
         KERNEL_STRUCTOR_PRINT_ENABLE
-         | OUSAN_DETECT_NON_MAXIMUM_SUPPRESSION
+//         | OUSAN_DETECT_NON_MAXIMUM_SUPPRESSION
 );
 
 
@@ -30,7 +30,7 @@ int main (int argc,char *argv[]) {
     double boundFNT = 0.20;
     double boundBGN = 0.20;
     double boundD = 0.4;
-    auto arrows = ousan_run(9, config)->detect(src, boundFNT, boundBGN, boundD, 0, 0);
+    auto arrows = ousan_run(9, config)->detect(src, boundFNT, boundBGN, boundD, 100, 0);
 
     for (auto & arrow : *arrows) {
         arrow.draw(src);

@@ -44,7 +44,7 @@ private:
     void binary (cv::Mat& roi, int t);
     std::pair<double, double> kernelJudge(cv::Mat roi, double boundFNT, double boundBGN,double boundD);
     static int getColorDistance(cv::Vec3b color1, cv::Vec3b color2);
-    bool judgeByDirections(cv::Mat roi, int threshold_v, int og);
+    std::pair<double, double> judgeByDirections(cv::Mat roi, int threshold_v, int og);
 public:
     std::vector<Arrow> * detect(cv::Mat src, double boundFNT, double boundBGN,double boundD, int threshold_v, int og);
     Ousan_detector(Ousan_kernel * knl, uint32_t config);
@@ -52,6 +52,22 @@ public:
 //--------------#core/detector#----------------//
 
 
+//---------------core/direction----------------//
+class Direction {
+public:
+    int n;
+    double d_same;
+    int n_same;
+    static bool cmp_n(const Direction &a, const Direction &b) {
+        return a.n_same > b.n_same;
+    }
+
+    static bool cmp_d(const Direction &a, const Direction &b) {
+        return a.d_same < b.d_same;
+    }
+
+};
+//---------------core/direction----------------//
 
 
 

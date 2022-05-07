@@ -19,7 +19,7 @@ void Ousan_kernel::kernelStructor() {
             if ((i * i + j * j) * 4 < this->diameter * this->diameter && !(i == 0 && j == 0)/* no center*/) {
 
                 if (config & KERNEL_STRUCTOR_PRINT_ENABLE) {
-                    printf(" 0");
+//                    printf(" 0");
                 }
 
                 this->grp[0].push_back(i);
@@ -30,11 +30,13 @@ void Ousan_kernel::kernelStructor() {
                         // in the area 1
                         this->direct[0][1][++dir_area_count[1]] = i;
                         this->direct[1][1][dir_area_count[1]] = j;
+//                        printf(" 1");
                     }
                     if (i <= j) {
                         // in the area 2
                         this->direct[0][2][++dir_area_count[2]] = i;
                         this->direct[1][2][dir_area_count[2]] = j;
+//                        printf(" 2");
                     }
                 }
                 if (i <= 0 && j >= 0) {
@@ -42,11 +44,13 @@ void Ousan_kernel::kernelStructor() {
                         // in the area 3
                         this->direct[0][3][++dir_area_count[3]] = i;
                         this->direct[1][3][dir_area_count[3]] = j;
+//                        printf(" 3");
                     }
                     if (-1 * i >= j) {
                         // in the area 4
                         this->direct[0][4][++dir_area_count[4]] = i;
                         this->direct[1][4][dir_area_count[4]] = j;
+//                        printf(" 4");
                     }
                 }
                 if (i <= 0 && j <= 0) {
@@ -54,11 +58,13 @@ void Ousan_kernel::kernelStructor() {
                         // in the area 5
                         this->direct[0][5][++dir_area_count[5]] = i;
                         this->direct[1][5][dir_area_count[5]] = j;
+//                        printf(" 5");
                     }
                     if (-1 * i <= -1 * j) {
                         // in the area 6
                         this->direct[0][6][++dir_area_count[6]] = i;
                         this->direct[1][6][dir_area_count[6]] = j;
+//                        printf(" 6");
                     }
                 }
                 if (i >= 0 && j <= 0) {
@@ -66,11 +72,13 @@ void Ousan_kernel::kernelStructor() {
                         // in the area 7
                         this->direct[0][7][++dir_area_count[7]] = i;
                         this->direct[1][7][dir_area_count[7]] = j;
+//                        printf(" 7");
                     }
                     if (i >= -1 * j) {
                         // in the area 8
                         this->direct[0][8][++dir_area_count[8]] = i;
                         this->direct[1][8][dir_area_count[8]] = j;
+//                        printf(" 8");
                     }
                 }
             } else {
@@ -86,6 +94,10 @@ void Ousan_kernel::kernelStructor() {
     if (config & KERNEL_STRUCTOR_PRINT_ENABLE) {
         printf("Area : %d (Non center) \n", area);
         printf("Direct_Area : %d\n", direct_area);
+        for (int i = 1;i<=8;i++) {
+            printf("%d ", dir_area_count[i]);
+        }
+        printf("\n");
     }
 }
 //--------------#core/kernel/OUSAN/builder#----------------//
@@ -102,7 +114,7 @@ Ousan_detector::Ousan_detector(Ousan_kernel *knl, uint32_t inputConfig) {
 //---------------core/detector/detect-----------------//
 double matStrength[3000][3000][2];
 std::vector<Arrow> *
-Ousan_detector::detect(cv::Mat src, double boundFNT, double boundBGN, double boundD, int threshold_v = 0, int og = 0) {
+Ousan_detector::detect(cv::Mat src, double boundFNT, double boundBGN, double boundD, int threshold_v, int og) {
 
     memset(matStrength, 0, sizeof(matStrength));
     cv::Mat proc;
@@ -131,14 +143,14 @@ Ousan_detector::detect(cv::Mat src, double boundFNT, double boundBGN, double bou
             }
 
             //OSTU//
-            int t = oSTU(roi);
+//            int t = oSTU(roi);
 
-            //Barbarization :: light the BACGround//
-            binary(roi, t);
-
+            //Barbarization :: light the BACKGround(for OSTU) and FROUNTGround(for O-USAN)//
+//            binary(roi, t);
+            this->judgeByDirections(roi, threshold_v, og);
             //judge the kernel//
-            std::pair<double, double> ans1 = kernelJudge(roi, boundFNT, boundBGN, boundD);
-            bool flag2 = judgeByDirections(roi, threshold_v, og);
+//            std::pair<double, double> ans1 = kernelJudge(roi, boundFNT, boundBGN, boundD);
+            std::pair<double, double> ans1 = kernelJudge(roi, 0, 0, boundD);
 
             //it's tested that judgeByDirections has few effect on results :-(
 
@@ -303,54 +315,110 @@ int Ousan_detector::getColorDistance(cv::Vec3b color1, cv::Vec3b color2) {
 
 
 //---------core/detector/judgeByDirections------------//
-bool Ousan_detector::judgeByDirections(cv::Mat roi, int threshold_v, int og) {
-    int n_same[9];
-    memset(n_same, 0, sizeof(n_same));
+std::pair<double, double> Ousan_detector::judgeByDirections(cv::Mat roi, int threshold_v, int og) {
+    Direction dir[9];
+
+    memset(dir, 0, sizeof(dir));
     for (int n = 1; n <= 8; n++) {
+        dir[n].n = n;
         for (int m = 1; m <= kernel->direct_area; m++) {
             int ii = kernel->diameter / 2;
             int jj = kernel->diameter / 2;
             int ni = ii + kernel->direct[0][n][m];
             int nj = jj + kernel->direct[1][n][m];
-            // if(thisKernel.at<Vec3b>(ni, nj)[0]<= t) {
+
             if (abs(roi.at<cv::Vec3b>(ni, nj)[0] - roi.at<cv::Vec3b>(ii, jj)[0]) <= threshold_v) {
-                n_same[n]++;
+                dir[n].n_same++;
             }
         }
     }
 
-    sort(n_same + 1, n_same + 8 + 1, std::greater<int>());
+    std::sort(dir+1, dir+8, (*dir).cmp_n);
 
-    if (n_same[1] - n_same[8] <= og) {
-        return false;
-    }
-    int d_same[9][2];
-    for (int n = 1; n <= 8; n++) {
-        d_same[n][0] = n;
-        if (n_same[n] == 0) {
-            d_same[n][1] = 0;
+    for (int n = 1; n <= 7; n++) {
+        if (dir[n].n_same == 0) {
+            dir[n].d_same = 0;
             continue;
         }
-        d_same[n][1] = 1.0 * (n_same[n] - n_same[(n + 1) % 8]) / (1.0 * n_same[n]);
+        dir[n].d_same = 1.0 * (dir[n].n_same - dir[n+1].n_same) / (1.0 * dir[n].n_same);
+        if (dir[n].n_same < this->kernel->direct_area/6) {
+            dir[n].d_same = 0;
+        }
+    }
+
+    std::sort(dir+1, dir+8, (*dir).cmp_d);
+
+    int maindir_v = 0;
+
+    for (int n = 1;n <=8; n++) {
+        if (dir[n].d_same > 0.5) {
+            maindir_v = n;
+            break;
+        }
     }
     bool mainDir[9];
     for (int k = 1; k <= 8; k++) {
-        if (d_same[k][1] > 0.5) {
-            break;
-        }
-        mainDir[k] = true;
+        mainDir[dir[k].n] = ((dir[k].n_same >= dir[maindir_v].n_same)&& (dir[k].n_same > this->kernel->direct_area/6));
     }
-    int rightSide = 0;
-    for (int n = 1; n <= 8; n++) {
-        if (mainDir[n] == 1 && mainDir[(n + 1) % 8] == 0) {
-            rightSide++;
+
+    bool rightside = 0;
+    bool co = 1;
+    for (int k = 1;k <= 8; k++) {
+        if (mainDir[k] && !mainDir[(k+1)%8]) {
+            if (rightside) {
+                co = 0;
+            }
+            else {
+                rightside = 1;
+            }
         }
     }
 
-    if (rightSide == 1) {
-        return true;
+    int dircount = 0;
+    for (int n = 1;n<=8; n++) {
+        if (mainDir[n]) {
+            dircount++;
+        }
     }
-    return false;
+
+    if (
+            dir[1].n_same - dir[8].n_same > og &&
+            dircount < 8 &&
+            dircount > 0
+            &&co
+            ) {
+        for (int n = 1; n <= 8; n++) {
+            for (int m = 1; m <= kernel->direct_area; m++) {
+                int ii = kernel->diameter / 2;
+                int jj = kernel->diameter / 2;
+                int ni = ii + kernel->direct[0][n][m];
+                int nj = jj + kernel->direct[1][n][m];
+                roi.at<cv::Vec3b>(ni, nj)[0] = mainDir[n];
+            }
+        }
+
+
+        for (int n = 1; n<=8; n++) {
+            if ((dir[n].n_same >= dir[maindir_v].n_same)&& (dir[n].n_same > this->kernel->direct_area/6)) {
+//                printf("%d ", dir[n].n);
+            }
+        }
+//        printf("\n");
+    }
+    else {
+        for (int n = 1; n <= 8; n++) {
+            for (int m = 1; m <= kernel->direct_area; m++) {
+                int ii = kernel->diameter / 2;
+                int jj = kernel->diameter / 2;
+                int ni = ii + kernel->direct[0][n][m];
+                int nj = jj + kernel->direct[1][n][m];
+                roi.at<cv::Vec3b>(ni, nj)[0] = 0;
+            }
+        }
+    }
+
+
+    return std::make_pair(0, 0);
 }
 //--------#core/detector/judgeByDirections------------//
 
